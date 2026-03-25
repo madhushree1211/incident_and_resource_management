@@ -1,1 +1,13 @@
-{\n  "name": "incident_and_resource_management",\n  "private": true,\n  "workspaces": ["app/frontend", "app/backend"],\n  "scripts": {\n    "dev": "pnpm --filter "*" dev",\n    "build": "pnpm --filter "*" build",\n    "lint": "pnpm --filter "*" lint"\n  }\n}
+{
+  "name": "incident_and_resource_management",
+  "private": true,
+  "workspaces": [
+    "app/frontend",
+    "app/backend"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter \"*\" dev",
+    "build": "pnpm --filter \"*\" build",
+    "lint": "pnpm --filter \"*\" lint"
+  }
+}
