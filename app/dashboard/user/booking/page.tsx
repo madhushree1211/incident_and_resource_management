@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   Calendar, 
@@ -174,11 +174,29 @@ export default function BookingPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [resources, setResources] = useState(allResources)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
   
   const { toasts, hideToast, showSuccess, showInfo } = useBookingToast()
 
-  const filteredResources = allResources.filter(r => {
+  useEffect(() => {
+    async function loadResources() {
+      try {
+        const response = await fetch('/api/resources')
+        if (!response.ok) {
+          throw new Error('Failed to load resources')
+        }
+        const serverResources = await response.json()
+        setResources(serverResources)
+      } catch {
+        setFetchError('Could not load backend resources. Using local sample data.')
+      }
+    }
+    loadResources()
+  }, [])
+
+  const filteredResources = resources.filter(r => {
     const matchesType = !selectedType || r.type === selectedType
     const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          r.location.toLowerCase().includes(searchQuery.toLowerCase())

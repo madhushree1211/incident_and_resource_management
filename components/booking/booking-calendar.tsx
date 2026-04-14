@@ -144,7 +144,7 @@ export function BookingCalendar({
             {getDaysInMonth(selectedDate).map((day, index) => {
               const isSelected = day && day.toDateString() === selectedDate.toDateString()
               const isBooked = day && isDateBooked(day)
-              const isPast = day && day < today
+              const isPast = day ? day < today : false
               
               return (
                 <motion.button

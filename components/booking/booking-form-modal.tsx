@@ -64,6 +64,7 @@ export function BookingFormModal({
   const [isSuccess, setIsSuccess] = useState(false)
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false)
   const [availabilityChecked, setAvailabilityChecked] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleCheckAvailability = async () => {
     setIsCheckingAvailability(true)
@@ -76,17 +77,14 @@ export function BookingFormModal({
   const handleSubmit = async () => {
     if (!resource || !selectedTime || !eventName || !attendees) return
     
+    setError(null)
     setIsSubmitting(true)
     
-    // Calculate end time
-    const startHour = parseInt(selectedTime.split(':')[0])
+    const startHour = parseInt(selectedTime.split(":")[0])
     const endHour = startHour + duration
     const endTime = `${endHour.toString().padStart(2, '0')}:00`
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    onSubmit({
+
+    const bookingPayload = {
       resourceId: resource.id,
       resourceName: resource.name,
       date: selectedDate.toISOString().split('T')[0],
@@ -95,22 +93,40 @@ export function BookingFormModal({
       duration,
       eventName,
       purpose,
-      attendees: parseInt(attendees)
-    })
-    
-    setIsSubmitting(false)
-    setIsSuccess(true)
-    
-    setTimeout(() => {
-      setIsSuccess(false)
-      onClose()
-      // Reset form
-      setEventName("")
-      setPurpose("")
-      setAttendees("")
-      setDuration(1)
-      setAvailabilityChecked(false)
-    }, 2000)
+      attendees: parseInt(attendees),
+    }
+
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingPayload),
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        setError(result.error || 'Unable to submit booking')
+        setIsSubmitting(false)
+        return
+      }
+
+      onSubmit(bookingPayload)
+      setIsSubmitting(false)
+      setIsSuccess(true)
+
+      setTimeout(() => {
+        setIsSuccess(false)
+        onClose()
+        setEventName("")
+        setPurpose("")
+        setAttendees("")
+        setDuration(1)
+        setAvailabilityChecked(false)
+      }, 2000)
+    } catch (err) {
+      setError('Unable to submit booking. Please try again.')
+      setIsSubmitting(false)
+    }
   }
 
   const formatTime = (time: string) => {
@@ -285,6 +301,11 @@ export function BookingFormModal({
                           </div>
                         </div>
                       </motion.div>
+
+                      {error && (
+                        <p className="text-sm text-red-400">{error}</p>
+                      )}
+
                     </div>
 
                     {/* Actions */}

@@ -14,22 +14,50 @@ interface LoginFormProps {
 export function LoginForm({ userType }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [userId, setUserId] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    
-    // Simulate login
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Redirect based on user type
-    if (userType === "user") {
-      router.push("/dashboard/user")
-    } else if (userType === "technician") {
-      router.push("/dashboard/technician")
-    } else {
-      router.push("/dashboard/admin")
+    setError(null)
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userType,
+          email,
+          password,
+          id: userId,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        setError(result.error || "Login failed")
+        setIsLoading(false)
+        return
+      }
+
+      if (userType === "user") {
+        router.push("/dashboard/user")
+      } else if (userType === "technician") {
+        router.push("/dashboard/technician")
+      } else {
+        router.push("/dashboard/admin")
+      }
+    } catch (err) {
+      setError("Login failed. Please try again.")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -50,6 +78,8 @@ export function LoginForm({ userType }: LoginFormProps) {
           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A3A3A3] group-focus-within:text-[#DC143C] transition-colors" />
           <motion.input
             type="text"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
             placeholder={userType === "user" ? "Enter your register number" : "Enter your ID"}
             className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] text-white placeholder-[#666] focus:outline-none focus:border-[#DC143C] focus:shadow-[0_0_20px_rgba(220,20,60,0.2)] transition-all"
             whileFocus={{ scale: 1.01 }}
@@ -65,6 +95,8 @@ export function LoginForm({ userType }: LoginFormProps) {
           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A3A3A3] group-focus-within:text-[#DC143C] transition-colors" />
           <motion.input
             type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
             className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] text-white placeholder-[#666] focus:outline-none focus:border-[#DC143C] focus:shadow-[0_0_20px_rgba(220,20,60,0.2)] transition-all"
             whileFocus={{ scale: 1.01 }}
@@ -80,6 +112,8 @@ export function LoginForm({ userType }: LoginFormProps) {
           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A3A3A3] group-focus-within:text-[#DC143C] transition-colors" />
           <motion.input
             type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
             className="w-full pl-12 pr-12 py-3 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] text-white placeholder-[#666] focus:outline-none focus:border-[#DC143C] focus:shadow-[0_0_20px_rgba(220,20,60,0.2)] transition-all"
             whileFocus={{ scale: 1.01 }}
@@ -94,6 +128,10 @@ export function LoginForm({ userType }: LoginFormProps) {
           </button>
         </div>
       </div>
+
+      {error && (
+        <p className="text-sm text-red-400">{error}</p>
+      )}
 
       {/* Forgot Password */}
       <div className="flex justify-end">
